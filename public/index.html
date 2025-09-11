@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LINE共有アプリ</title>
   <style>
     body {
@@ -15,33 +16,20 @@
     }
     .container {
       background: #fff;
-      padding: 30px;
+      padding: 20px;
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 90%;
+      width: 95%;
       max-width: 400px;
       text-align: center;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-      color: #333;
-    }
-    input {
-      width: 100%;
-      padding: 12px 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
       box-sizing: border-box;
     }
+    h1 { font-size: 1.4rem; margin-bottom: 20px; color: #333; }
+    input { width: 100%; padding: 14px 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; box-sizing: border-box; }
     button {
       width: 100%;
       padding: 15px;
-      margin-top: 15px;
-      background-color: #00c300;
-      color: white;
+      margin-top: 10px;
       font-size: 1.1rem;
       font-weight: bold;
       border: none;
@@ -49,26 +37,29 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    button:hover {
-      background-color: #00a000;
-    }
+    #startBtn { background-color: #00c300; color: white; }
+    #startBtn:hover { background-color: #00a000; }
+    #stopBtn { background-color: #c30000; color: white; }
+    #stopBtn:hover { background-color: #a00000; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>LINE共有アプリ</h1>
-    <form id="msgForm">
-      <input type="text" id="message" placeholder="メッセージを入力" required>
-      <input type="number" id="length" placeholder="乱数の桁数" min="1" value="6" required>
-      <input type="number" id="duration" placeholder="共有秒数" min="1" value="10" required>
-      <input type="number" id="interval" placeholder="間隔(秒)" min="1" value="3" required>
-      <button type="submit">LINEで共有</button>
-    </form>
+    <input type="text" id="message" placeholder="メッセージを入力" required>
+    <input type="number" id="length" placeholder="乱数の桁数" min="1" value="6" required>
+    <input type="number" id="duration" placeholder="共有秒数" min="1" value="10" required>
+    <input type="number" id="interval" placeholder="間隔(秒)" min="1" value="3" required>
+    <button id="startBtn">LINEで共有開始</button>
+    <button id="stopBtn">緊急停止</button>
   </div>
 
   <script>
-    document.getElementById("msgForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    let stopFlag = false; // 停止フラグ
+    let timeoutId = null;
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      stopFlag = false;
       const message = document.getElementById("message").value;
       const length = parseInt(document.getElementById("length").value);
       const duration = parseInt(document.getElementById("duration").value) * 1000;
@@ -77,6 +68,7 @@
       const startTime = Date.now();
 
       function shareLoop() {
+        if (stopFlag) return; // 停止ボタン押されたら終了
         const now = Date.now();
         if (now - startTime >= duration) return;
 
@@ -90,10 +82,16 @@
           window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(data.output)}`;
         });
 
-        setTimeout(shareLoop, interval);
+        timeoutId = setTimeout(shareLoop, interval); // 次回共有を予約
       }
 
-      shareLoop();
+      shareLoop(); // 最初の共有開始
+    });
+
+    document.getElementById("stopBtn").addEventListener("click", () => {
+      stopFlag = true;
+      if (timeoutId) clearTimeout(timeoutId); // 次回共有をキャンセル
+      alert("共有を停止しました");
     });
   </script>
 </body>
