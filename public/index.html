@@ -3,12 +3,42 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>My Simple Web App</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Message App</title>
 </head>
 <body>
-  <h1>Hello Node.js Web App!</h1>
-  <button onclick="showMessage()">Click Me</button>
-  <script src="script.js"></script>
+  <h1>メッセージ送信テスト</h1>
+  <form id="msgForm">
+    <input type="text" id="message" placeholder="メッセージを入力" required>
+    <input type="number" id="length" placeholder="乱数の桁数" min="1" value="6" required>
+    <input type="number" id="count" placeholder="共有回数" min="1" value="1" required>
+    <input type="number" id="interval" placeholder="間隔(秒)" min="1" value="3" required>
+    <button type="submit">LINEで共有</button>
+  </form>
+
+  <script>
+    document.getElementById("msgForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = document.getElementById("message").value;
+      const length = parseInt(document.getElementById("length").value);
+      const count = parseInt(document.getElementById("count").value);
+      const interval = parseInt(document.getElementById("interval").value) * 1000; // ミリ秒変換
+
+      for (let i = 0; i < count; i++) {
+        setTimeout(async () => {
+          const res = await fetch("/api/message", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message, length })
+          });
+
+          const data = await res.json();
+
+          // LINE共有リンクを開く
+          window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(data.output)}`;
+        }, i * interval);
+      }
+    });
+  </script>
 </body>
 </html>
+
